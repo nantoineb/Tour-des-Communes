@@ -1,4 +1,4 @@
-﻿Commune,Visitee,Province,Région,Date de visite,Photos,Commentaires
+﻿Commune,Visite,Province,Région,Date de visite,Photos,Commentaires
 Anderlecht,No,Bruxelles,Bruxelles-Capitale,,,
 Auderghem,No,Bruxelles,Bruxelles-Capitale,,,
 Berchem-Sainte-Agathe,No,Bruxelles,Bruxelles-Capitale,,,
@@ -579,4 +579,5 @@ Zulte,No,Province de Flandre-Orientale,Région Flamande,,,
 Zutendaal,No,Province de Limbourg,Région Flamande,,,
 Zwalin1,No,Province de Flandre-Orientale,Région Flamande,,,
 Zwevegem,No,Province de Flandre-Occidentale,Région Flamande,,,
+
 Zwijndrecht,No,Province d'Anvers,Région Flamande,,,
