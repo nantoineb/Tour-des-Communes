@@ -38,7 +38,6 @@
         .trim()
         .toLowerCase();
     }
-
     function normalizeName(name) { return normalizeText(name); }
 
     function buildColumnKeyMap(row) {
@@ -58,12 +57,9 @@
     const C_VISITED = ["Visitee","Visité","Visité ?","Visited","Visited ?","Visité?","visited"];
     const C_DATE = ["Date de visite","Date"];
     const C_COMMENT = ["Commentaires","Commentaire","Notes","Note","Remarques"];
-    const C_PROVINCE = ["Province"];
-    const C_REGION = ["Région","Region"];
 
     const TRUE_SET = new Set(["oui","yes","true","1","x","y","vrai","ok","visited"]);
 
-    // Ajout des champs spécifiques Statbel
     const NAME_FIELDS = [
       "ADMUNAFR","ADMUNADU","ADMUNAGE","Communes",
       "name","name_fr","nom","commune","municipality","gemeente",
@@ -84,26 +80,21 @@
           const visitedMap = {};
           result.data.forEach(row => {
             const keyMap = buildColumnKeyMap(row);
-
             const rawName = pickField(row, keyMap, C_COMMUNE);
             if (!rawName) return;
 
             const rawVisited = pickField(row, keyMap, C_VISITED);
             const rawDate = pickField(row, keyMap, C_DATE) || "";
             const rawComment = pickField(row, keyMap, C_COMMENT) || "";
-            const rawProvince = pickField(row, keyMap, C_PROVINCE) || "";
-            const rawRegion = pickField(row, keyMap, C_REGION) || "";
 
             const key = normalizeName(rawName);
             const v = String(rawVisited ?? "").toLowerCase().trim();
             const isVisited = TRUE_SET.has(v);
 
-            visitedMap[key] = {
-              visited: isVisited,
-              date: rawDate,
-              comment: rawComment,
-              province: rawProvince,
-              region: rawRegion
+            visitedMap[key] = { 
+              visited: isVisited, 
+              date: rawDate, 
+              comment: rawComment 
             };
           });
           return visitedMap;
@@ -137,14 +128,12 @@
             if (props[f] != null) { name = String(props[f]); break; }
           }
           const key = normalizeName(name);
-          const data = visited[key] || { visited: false, date: "", comment: "", province: "", region: "" };
+          const data = visited[key] || { visited: false, date: "", comment: "" };
 
           let popup = `<b>${name || "Commune"}</b><br>`;
           popup += data.visited ? "Visité" : "Non visité";
           if (data.date) popup += `<br>Date : ${data.date}`;
           if (data.comment) popup += `<br>${data.comment}`;
-          if (data.province) popup += `<br>Province : ${data.province}`;
-          if (data.region) popup += `<br>Région : ${data.region}`;
 
           layer.bindPopup(popup);
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
