@@ -105,6 +105,7 @@
       loadVisitedCSV(),
       fetch('belgium-communes.geojson').then(r => r.json())
     ]).then(([visited, geo]) => {
+      const geoKeys = new Set();
       const layer = L.geoJSON(geo, {
         style: feature => {
           const props = feature.properties || {};
@@ -113,6 +114,7 @@
             if (props[f] != null) { name = String(props[f]); break; }
           }
           const key = normalizeName(name);
+          geoKeys.add(key);
           const isVisited = visited[key]?.visited || false;
           return {
             color: "#555",
@@ -140,6 +142,23 @@
           layer.on('mouseout', () => layer.setStyle({ weight: 0.8 }));
         }
       }).addTo(map);
+
+      // Debugging: communes dans GeoJSON mais pas dans CSV
+      console.group("DEBUG - Vérification des correspondances");
+      const visitedKeys = new Set(Object.keys(visited));
+
+      geoKeys.forEach(k => {
+        if (!visitedKeys.has(k)) {
+          console.warn("⚠️ Commune dans GeoJSON mais absente du CSV :", k);
+        }
+      });
+
+      visitedKeys.forEach(k => {
+        if (!geoKeys.has(k)) {
+          console.warn("⚠️ Commune dans CSV mais absente du GeoJSON :", k);
+        }
+      });
+      console.groupEnd();
 
       try { map.fitBounds(layer.getBounds(), { padding: [10, 10] }); } catch (e) {}
     }).catch(err => {
