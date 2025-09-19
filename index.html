@@ -58,7 +58,7 @@
       return fetch('visited.csv')
         .then(r => r.text())
         .then(text => {
-          const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+          const result = Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ";"});
           const visitedMap = {};
           result.data.forEach(row => {
             // Essayer plusieurs variantes de noms de colonnes de Notion
