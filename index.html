@@ -43,7 +43,7 @@
 
     // Probables clés de nom de commune dans le GeoJSON (on essaie dans cet ordre)
     const NAME_FIELDS = [
-      "ADMUNAFR", "ADMUNADU", "ADMUNAGE", "Communes", "name", "name_fr", "nom", "commune", "municipality", "gemeente",
+      "name", "name_fr", "nom", "commune", "municipality", "gemeente",
       "naam", "NAAM", "NAME_2", "name_nl", "name_de"
     ];
 
@@ -53,22 +53,24 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // 1) Charger le CSV Notion => dictionnaire { nom_normalise: true/false }
+    // 1) Charger le CSV Notion => dictionnaire { nom_normalise: { visited: true/false, date: ... } }
     function loadVisitedCSV() {
       return fetch('visited.csv')
         .then(r => r.text())
         .then(text => {
-          const result = Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ";"});
+          const result = Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ";" });
           const visitedMap = {};
           result.data.forEach(row => {
-            // Essayer plusieurs variantes de noms de colonnes de Notion
-            const rawName = row["Commune"] || row["commune"] || row["Municipalité"] || row["Municipality"] || row["Gemeente"];
-            const rawVisited = row["Visitee"] ?? row["Visité"] ?? row["Visited"] ?? row["visited"] ?? row["Oui/Non"];
+            const rawName = row["Commune"] || row["commune"] || row["Municipality"] || row["Gemeente"];
+            const rawVisited = row["Visitee"] ?? row["Visité"] ?? row["Visited"];
+            const rawDate = row["Date"] ?? row["date"] ?? "";
+
             if (!rawName) return;
             const key = normalizeName(rawName);
             const v = String(rawVisited ?? "").toLowerCase().trim();
             const isVisited = (v === "oui" || v === "yes" || v === "true" || v === "1" || v === "x");
-            visitedMap[key] = isVisited;
+
+            visitedMap[key] = { visited: isVisited, date: rawDate };
           });
           return visitedMap;
         });
@@ -81,14 +83,13 @@
     ]).then(([visited, geo]) => {
       const layer = L.geoJSON(geo, {
         style: feature => {
-          // Trouver le nom de la commune dans les propriétés
           const props = feature.properties || {};
           let name = "";
           for (const f of NAME_FIELDS) {
             if (props[f] != null) { name = String(props[f]); break; }
           }
           const key = normalizeName(name);
-          const isVisited = !!visited[key];
+          const isVisited = visited[key]?.visited || false;
           return {
             color: "#555",
             weight: 0.8,
@@ -103,14 +104,18 @@
             if (props[f] != null) { name = String(props[f]); break; }
           }
           const key = normalizeName(name);
-          const isVisited = !!visited[key];
-          layer.bindPopup(`<b>${name || "Commune"}</b><br>${isVisited ? "Visité" : "Non visité"}`);
+          const data = visited[key] || { visited: false, date: "" };
+
+          let popup = `<b>${name || "Commune"}</b><br>`;
+          popup += data.visited ? "✅ Visité" : "❌ Non visité";
+          if (data.date) popup += `<br>Date : ${data.date}`;
+
+          layer.bindPopup(popup);
           layer.on('mouseover', () => layer.setStyle({ weight: 2 }));
           layer.on('mouseout', () => layer.setStyle({ weight: 0.8 }));
         }
       }).addTo(map);
 
-      // Adapter le zoom à la Belgique
       try { map.fitBounds(layer.getBounds(), { padding: [10, 10] }); } catch (e) {}
     }).catch(err => {
       console.error(err);
